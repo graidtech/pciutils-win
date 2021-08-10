@@ -6,6 +6,10 @@
  *	Can be freely distributed and used under the terms of the GNU GPL.
  */
 
+#ifdef WIN32
+  #include <windows.h>
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
@@ -155,9 +159,27 @@ pci_alloc(void)
 {
   struct pci_access *a = malloc(sizeof(struct pci_access));
   int i;
+#ifdef WIN32
+  char *pci_ids_path = malloc(MAX_PATH+1);
+#endif
 
   memset(a, 0, sizeof(*a));
+#ifdef WIN32
+  /* look for pci.ids in executable directory instead of current directory */
+  if (!GetModuleFileName(NULL, pci_ids_path, MAX_PATH))
+    {
+      pci_set_name_list_path(a, PCI_PATH_IDS_DIR "/" PCI_IDS, 0);
+      free(pci_ids_path);
+    }
+  else
+    {
+      *(strrchr(pci_ids_path, '\\') + 1) = '\0';
+      strncat(pci_ids_path, PCI_IDS, MAX_PATH - strlen(PCI_IDS) - 1);
+      pci_set_name_list_path(a, pci_ids_path, 1);
+    }
+#else
   pci_set_name_list_path(a, PCI_PATH_IDS_DIR "/" PCI_IDS, 0);
+#endif
 #ifdef PCI_USE_DNS
   pci_define_param(a, "net.domain", PCI_ID_DOMAIN, "DNS domain used for resolving of ID's");
   pci_define_param(a, "net.cache_name", "~/.pciids-cache", "Name of the ID cache file");
