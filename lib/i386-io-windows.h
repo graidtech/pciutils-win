@@ -62,77 +62,33 @@ intel_setup_io(struct pci_access *a)
   if (fnSetDllDirectory)
     fnSetDllDirectory("");
 
-#ifndef WIN64
-  if ((GetVersion() & 0x80000000) == 0)
-    { /* running on NT, try DirectIo first */
-      lib = LoadLibrary("DirectIOLib32.dll");
+#ifndef _AMD64_
+  lib = LoadLibrary("DirectIOLib32.dll");
 #else
-      lib = LoadLibrary("DirectIOLibx64.dll");
+  lib = LoadLibrary("DirectIOLibx64.dll");
 #endif
-      if (!lib)
-        { /* DirectIO loading failed, try WinIO instead */
-        #ifdef WIN64
-          lib = LoadLibrary("WinIo64.dll");
-        #else
-          lib = LoadLibrary("WinIo32.dll");
-          if (!lib)
-            { /* WinIo 3 loading failed, try loading WinIo 2 */
-              lib = LoadLibrary("WinIo.dll");
-            }
-        #endif
-          if (!lib)
-            {
-              a->warning("i386-io-windows: Neither DirectIO, nor WinIo library could be loaded.\n");
-              return 0;
-            }
-          else
-              lib_used = LIB_WINIO;
-        }
-      else
-          lib_used = LIB_DIRECTIO;
-#ifndef WIN64
-    }
-  else
-    { /* running on Win9x, only try loading WinIo 2 */
-      lib = LoadLibrary("WinIo.dll");
-      if (!lib)
-        {
-          a->warning("i386-io-windows: WinIo library could not be loaded.\n");
-          return 0;
-        }
-      else
-          lib_used = LIB_WINIO;
-    }
-#endif
+  if (!lib)
+  {
+    a->warning("i386-io-windows: No DirectIO library could be loaded.\n");
+    return 0;
+  }
+  lib_used = LIB_DIRECTIO;
 
-#define GETPROC(n,d)   n = (d) GetProcAddress(lib, #n); \
-                               if (!n) \
-                                 { \
-                                   a->warning("i386-io-windows: Couldn't find " #n " function.\n"); \
-                                   return 0; \
-                                 }
+#define GETPROC(n,d) n = (d)GetProcAddress(lib, #n); \
+                     if (!n) { \
+                       a->warning("i386-io-windows: Couldn't find " #n " function.\n"); \
+                       return 0; \
+                     }
 
+  GETPROC(DirectIO_Init, DIRECTIO_INIT);
+  GETPROC(DirectIO_DeInit, DIRECTIO_DEINIT);
+  GETPROC(DirectIO_WritePort, DIRECTIO_WRITEPORT);
+  GETPROC(DirectIO_ReadPort, DIRECTIO_READPORT);
 
-  if (lib_used == LIB_DIRECTIO)
-    {
-      GETPROC(DirectIO_Init, DIRECTIO_INIT);
-      GETPROC(DirectIO_DeInit, DIRECTIO_DEINIT);
-      GETPROC(DirectIO_WritePort, DIRECTIO_WRITEPORT);
-      GETPROC(DirectIO_ReadPort, DIRECTIO_READPORT);
-    }
-  else
-    {
-      GETPROC(InitializeWinIo, INITIALIZEWINIO);
-      GETPROC(ShutdownWinIo, SHUTDOWNWINIO);
-      GETPROC(GetPortVal, GETPORTVAL);
-      GETPROC(SetPortVal, SETPORTVAL);
-    }
-
-  if (!((lib_used == LIB_DIRECTIO) ? DirectIO_Init() : InitializeWinIo()))
-    {
+  if (!DirectIO_Init()) {
       a->warning("i386-io-windows: IO library initialization failed. Try running from an elevated command prompt.\n");
       return 0;
-    }
+  }
 
   return 1;
 }
