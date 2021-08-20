@@ -10,7 +10,11 @@
 
 #include "internal.h"
 
+#ifndef _WIN32
 #include <unistd.h>
+#else
+#include <io.h>
+#endif
 
 #if defined(PCI_OS_LINUX)
 #include "i386-io-linux.h"
