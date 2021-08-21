@@ -9,7 +9,7 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /D_AMD64_")
 
 add_custom_target(
 	copy_win32_config
-	COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/../win32/config.h ${CMAKE_SOURCE_DIR}
+	COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/../win32/config.h ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
 add_library(libpci STATIC
