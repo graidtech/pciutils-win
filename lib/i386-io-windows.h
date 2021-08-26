@@ -62,7 +62,7 @@ intel_setup_io(struct pci_access *a)
   if (fnSetDllDirectory)
     fnSetDllDirectory("");
 
-#ifndef WIN64
+#ifndef _AMD64_
   if ((GetVersion() & 0x80000000) == 0)
     { /* running on NT, try DirectIo first */
       lib = LoadLibrary("DirectIOLib32.dll");
@@ -71,7 +71,7 @@ intel_setup_io(struct pci_access *a)
 #endif
       if (!lib)
         { /* DirectIO loading failed, try WinIO instead */
-        #ifdef WIN64
+        #ifdef _AMD64_
           lib = LoadLibrary("WinIo64.dll");
         #else
           lib = LoadLibrary("WinIo32.dll");
@@ -90,7 +90,7 @@ intel_setup_io(struct pci_access *a)
         }
       else
           lib_used = LIB_DIRECTIO;
-#ifndef WIN64
+#ifndef _AMD64_
     }
   else
     { /* running on Win9x, only try loading WinIo 2 */
