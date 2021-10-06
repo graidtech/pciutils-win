@@ -29,6 +29,7 @@ typedef void (WINAPI *GETNATIVESYSTEMINFO)(LPSYSTEM_INFO);
 typedef BOOL (WINAPI *ISWOW64PROCESS)(HANDLE,PBOOL);
 
 HINSTANCE hDirectIoLib; /* assigned hInstance of the DLL in DllMain */
+BOOL bIsSysAlreadyExist;    //if DirectIO.sys already registered in system, don't uninstall it in DirectIO_DeInit().
 
 /* GetModuleFileName can return \\?\ paths, so MAX_PATH might be too short */
 #define DIRECTIO_MAX_PATH  32767
@@ -251,6 +252,7 @@ DIRECTIOLIB_EXTERN BOOL _stdcall DirectIO_Init()
 
 	if (hDirectIO == INVALID_HANDLE_VALUE)
 	{
+	    bIsSysAlreadyExist = FALSE;
 		if (!DirectIO_PrepareDriver()) {
 			return 0;
 		}
@@ -268,6 +270,8 @@ DIRECTIOLIB_EXTERN BOOL _stdcall DirectIO_Init()
 			return 0;
 		}
 	}
+	else
+        bIsSysAlreadyExist = TRUE;
 
 	return 1;
 
@@ -283,7 +287,10 @@ DIRECTIOLIB_EXTERN void _stdcall DirectIO_DeInit()
 		hDirectIO = INVALID_HANDLE_VALUE;
 	}
 
-	DirectIO_Uninstall();
+    //If the DirectIO.sys is pre-installed in system, don't uninstall here.
+    //If DirectIO.sys is dropped by this DLL, just remove it.
+    if(bIsSysAlreadyExist == FALSE)
+	    DirectIO_Uninstall();
 }
 
 /* write to port
