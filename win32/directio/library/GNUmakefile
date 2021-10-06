@@ -7,9 +7,9 @@ X32=i686-pc-mingw32
 CC32=$(X32)-gcc
 RC32=$(X32)-windres
 
-X64=x86_64-pc-mingw32
+X64=x86_64-w64-mingw32
 CC64=$(X64)-gcc
-RC64=$(X64)-windres
+RC64=windres
 
 all: DirectIOLib32.dll DirectIOLibx64.dll
 
