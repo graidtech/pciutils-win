@@ -18,12 +18,18 @@
  *
  */
 
-#define UNICODE
+#ifndef UNICODE
+	#define UNICODE
+#endif
+#define _CRT_SECURE_NO_WARNINGS
+
 #define NOGDI
 #include <windows.h>
 #include <wchar.h>
 #define BUILDING_DIRECTIOLIB
 #include "directiolib.h"
+
+#include <string.h>
 
 typedef void (WINAPI *GETNATIVESYSTEMINFO)(LPSYSTEM_INFO);
 typedef BOOL (WINAPI *ISWOW64PROCESS)(HANDLE,PBOOL);
